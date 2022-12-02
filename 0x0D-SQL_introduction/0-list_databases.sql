@@ -1,1 +1,2 @@
-0x0D-SQL_introduction
+-- lists all databases of your MySQL server.
+SHOW DATABASES;

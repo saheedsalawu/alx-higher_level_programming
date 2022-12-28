@@ -1,40 +1,40 @@
 #!/usr/bin/python3
-
 """
-This is a script that takes in the name
-of a state as an argument and lists all cities of
-that state, using the database hbtn_0e_4_usa
+This script  takes in the name of a state
+as an argument and lists all cities of that
+state, using the database `hbtn_0e_4_usa`.
 """
 
-
-import MySQLdb
-import sys
+import MySQLdb as db
+from sys import argv
 
 if __name__ == "__main__":
-    arg = sys.argv
-    conn = MySQLdb.connect(
-        host="localhost",
-        port=3306, user=arg[1],
-        passwd=arg[2], db=arg[3],
-        charset="utf8"
-        )
-    cur = conn.cursor()
-    if "'" in arg[4]:
-        idx = arg[4].index("'")
-        arg[4] = arg[4][:idx]
-    cur.execute(
-            """SELECT cities.name
-            FROM cities
-            INNER JOIN states ON states.id = cities.state_id
-            WHERE states.name = '{}'
-            ORDER BY cities.id ASC""".format(arg[4])
-            )
-    city_rows = cur.fetchall()
-    for i in range(len(city_rows)):
-        print(city_rows[i][0], end='')
-        if (i != len(city_rows) - 1):
-            print(', ', end='')
-        else:
-            print('')
-    cur.close()
-    conn.close()
+    """
+    Access to the database and get the cities
+    from the database.
+    """
+
+    db_connect = db.connect(host="localhost", port=3306,
+                            user=argv[1], passwd=argv[2], db=argv[3])
+
+    with db_connect.cursor() as db_cursor:
+        db_cursor.execute("""
+            SELECT
+                cities.id, cities.name
+            FROM
+                cities
+            JOIN
+                states
+            ON
+                cities.state_id = states.id
+            WHERE
+                states.name LIKE BINARY %(state_name)s
+            ORDER BY
+                cities.id ASC
+        """, {
+            'state_name': argv[4]
+        })
+        rows_selected = db_cursor.fetchall()
+
+    if rows_selected is not None:
+        print(", ".join([row[1] for row in rows_selected]))
